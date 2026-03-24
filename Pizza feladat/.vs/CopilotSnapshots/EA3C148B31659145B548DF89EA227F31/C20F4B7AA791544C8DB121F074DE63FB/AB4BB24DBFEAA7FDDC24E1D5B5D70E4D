@@ -1,0 +1,163 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace szamonkeres20260317
+{
+    public partial class menulap : Form
+    {
+       private List<string> nevlista = new List<string>();
+        private List<int> kicsilista = new List<int>();
+        private List<int> nagylista = new List<int>();
+        public menulap()
+        {
+            InitializeComponent();
+            OpenFileDialog ofd = new OpenFileDialog();
+         
+
+            try
+            {
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    string[] lines = System.IO.File.ReadAllLines(ofd.FileName);
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        string[] parts = lines[i].Split(';');
+                        if (parts.Length == 3)
+                        {
+                            string nev = parts[0];
+                            int kicsi = int.Parse(parts[1]);
+                            int nagy = int.Parse(parts[2]);
+                            nevlista.Add(nev);
+                            kicsilista.Add(kicsi);
+                            nagylista.Add(nagy);
+
+
+
+                        }
+                    }
+
+
+
+                }
+            }
+            catch (Exception)
+            {
+
+                MessageBox.Show("Hiba adatbevitel közben");
+                this.Close();
+            }
+        }
+
+        private void menulap_Load(object sender, EventArgs e)
+        {
+            int y = 10;
+
+            for (int i = 0; i < nevlista.Count; i++)
+            {
+                Panel sorPanel = new Panel();
+                sorPanel.Width = panelMenu.Width - 25;
+                sorPanel.Height = 40;
+                sorPanel.Location = new Point(10, y);
+                sorPanel.BackColor = Color.Green;
+
+                // CheckBox
+                CheckBox cb = new CheckBox();
+                cb.Text = nevlista[i];
+                cb.Location = new Point(5, 10);
+                cb.Width = 120;
+
+                // RadioButton - kicsi
+                RadioButton rbKicsi = new RadioButton();
+                rbKicsi.Text = kicsilista[i] + " Ft";
+                rbKicsi.Location = new Point(140, 10);
+                rbKicsi.BringToFront();
+
+                // RadioButton - nagy
+                RadioButton rbNagy = new RadioButton();
+                rbNagy.Text = nagylista[i] + " Ft";
+                rbNagy.Location = new Point(220, 10);
+                rbNagy.BringToFront();
+
+                // TextBox (darabszám)
+                TextBox tbDb = new TextBox();
+                tbDb.Location = new Point(320, 8);
+                tbDb.Width = 40;
+
+                // Hozzáadás a sor panelhez
+                sorPanel.Controls.Add(cb);
+                sorPanel.Controls.Add(rbKicsi);
+                sorPanel.Controls.Add(rbNagy);
+                sorPanel.Controls.Add(tbDb);
+
+                // Hozzáadás a fő panelhez
+                panelMenu.Controls.Add(sorPanel);
+
+                y += 45;
+            }
+
+            foreach (Panel sor in panelMenu.Controls)
+            {
+                CheckBox cb = null;
+                RadioButton rbKicsi = null;
+                RadioButton rbNagy = null;
+                TextBox tb = null;
+
+                foreach (Control c in sor.Controls)
+                {
+                    if (c is CheckBox) cb = (CheckBox)c;
+                    if (c is RadioButton rb)
+                    {
+                        if (rb.Text.Contains("Ft")) // egyszerű megkülönböztetés
+                        {
+                            if (rb.Location.X < 200)
+                                rbKicsi = rb;
+                            else
+                                rbNagy = rb;
+                        }
+                    }
+                    if (c is TextBox) tb = (TextBox)c;
+                }
+
+                if (cb.Checked)
+                {
+                    int db;
+                    if (!int.TryParse(tb.Text, out db) || db <= 0)
+                    {
+                        MessageBox.Show("Hibás darabszám!");
+                        return;
+                    }
+
+                    int ar = 0;
+                    if (rbKicsi.Checked)
+                        ar = int.Parse(rbKicsi.Text.Replace(" Ft", ""));
+                    else if (rbNagy.Checked)
+                        ar = int.Parse(rbNagy.Text.Replace(" Ft", ""));
+                    else
+                    {
+                        MessageBox.Show("Válassz méretet!");
+                        return;
+                    }
+
+                    // itt számolsz
+                }
+            }
+
+
+
+
+
+        }
+
+        private void btnexit_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+    }
+}
