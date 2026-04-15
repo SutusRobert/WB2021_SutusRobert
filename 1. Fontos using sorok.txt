@@ -1,0 +1,423 @@
+1. Fontos using sorok
+using System;
+using System.Data;
+using System.Data.SqlClient;
+using System.IO;
+using System.Windows.Forms;
+
+2. SQL kapcsolat alapja
+
+Ez kell, ha SQL Server adatbázishoz csatlakozol.
+
+string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=AdatbazisNev;Integrated Security=True";
+Ha felhasználónév-jelszó kell:
+
+string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=AdatbazisNev;User ID=sa;Password=
+
+
+3. Egyszerű lekérdezés és DataGridView feltöltés
+
+
+private void AdatokBetoltese()
+{
+    string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=AdatbazisNev;Integrated Security=True";
+    string query = "SELECT * FROM Tanulok";
+
+    using (SqlConnection conn = new SqlConnection(connectionString))
+    {
+        try
+        {
+            conn.Open();
+
+            SqlDataAdapter adapter = new SqlDataAdapter(query, conn);
+            DataTable dt = new DataTable();
+            adapter.Fill(dt);
+
+            dataGridView1.DataSource = dt;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Hiba: " + ex.Message);
+        }
+    }
+}
+
+
+Például Form_Load eseményben:
+
+
+private void Form1_Load(object sender, EventArgs e)
+{
+    AdatokBetoltese();
+}
+
+4. Lekérdezés feltétellel (WHERE)
+Például textBox1 alapján keresel névre.
+
+
+private void Kereses()
+{
+    string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=AdatbazisNev;Integrated Security=True";
+    string query = "SELECT * FROM Tanulok WHERE Nev LIKE @nev";
+
+    using (SqlConnection conn = new SqlConnection(connectionString))
+    {
+        try
+        {
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@nev", "%" + textBox1.Text + "%");
+
+            SqlDataAdapter adapter = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            adapter.Fill(dt);
+
+            dataGridView1.DataSource = dt;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Hiba: " + ex.Message);
+        }
+    }
+}
+
+Gombhoz:
+
+private void buttonKereses_Click(object sender, EventArgs e)
+{
+    Kereses();
+}
+
+
+5. Egyetlen adat lekérése ExecuteScalar-ral
+
+Például hány tanuló van.
+
+private void Darabszam()
+{
+    string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=AdatbazisNev;Integrated Security=True";
+    string query = "SELECT COUNT(*) FROM Tanulok";
+
+    using (SqlConnection conn = new SqlConnection(connectionString))
+    {
+        try
+        {
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            int db = (int)cmd.ExecuteScalar();
+
+            MessageBox.Show("Tanulók száma: " + db);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Hiba: " + ex.Message);
+        }
+    }
+}
+
+6. Beszúrás adatbázisba INSERT
+
+private void UjAdat()
+{
+    string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=AdatbazisNev;Integrated Security=True";
+    string query = "INSERT INTO Tanulok(Nev, Kor) VALUES(@nev, @kor)";
+
+    using (SqlConnection conn = new SqlConnection(connectionString))
+    {
+        try
+        {
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@nev", textBoxNev.Text);
+            cmd.Parameters.AddWithValue("@kor", int.Parse(textBoxKor.Text));
+
+            cmd.ExecuteNonQuery();
+
+            MessageBox.Show("Sikeres mentés!");
+            AdatokBetoltese();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Hiba: " + ex.Message);
+        }
+    }
+}
+
+Módosítás
+
+private void Modositas()
+{
+    string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=AdatbazisNev;Integrated Security=True";
+    string query = "UPDATE Tanulok SET Nev=@nev, Kor=@kor WHERE Id=@id";
+
+    using (SqlConnection conn = new SqlConnection(connectionString))
+    {
+        try
+        {
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", int.Parse(textBoxId.Text));
+            cmd.Parameters.AddWithValue("@nev", textBoxNev.Text);
+            cmd.Parameters.AddWithValue("@kor", int.Parse(textBoxKor.Text));
+
+            cmd.ExecuteNonQuery();
+
+            MessageBox.Show("Sikeres módosítás!");
+            AdatokBetoltese();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Hiba: " + ex.Message);
+        }
+    }
+}
+8. Törlés DELETE
+
+private void Torles()
+{
+    string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=AdatbazisNev;Integrated Security=True";
+    string query = "DELETE FROM Tanulok WHERE Id=@id";
+
+    using (SqlConnection conn = new SqlConnection(connectionString))
+    {
+        try
+        {
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", int.Parse(textBoxId.Text));
+
+            cmd.ExecuteNonQuery();
+
+            MessageBox.Show("Sikeres törlés!");
+            AdatokBetoltese();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Hiba: " + ex.Message);
+        }
+    }
+}
+
+Megnézem a feltöltött mintát, és abból összerakom, milyen nehezebb feladatokra érdemes készülni, plusz adok hozzá kész programrészeket is.Ennyi ideig gondolkozott: 4m 2sIgen, ebből már elég jól látszik, milyen irányra számíthattok.
+A feltöltött minta alapján ez nem sima “írj ki pár adatot” típusú feladat, hanem inkább ilyenekre kell készülni:
+
+
+fájlbeolvasás OpenFileDialog-gal
+
+
+adatok feldolgozása Split(';') segítségével
+
+
+vezérlők kezelése WinFormsban
+
+
+ellenőrzés, hibakezelés
+
+
+számolás
+
+
+több sor adat dinamikus feldolgozása
+
+
+kijelölések és beviteli mezők törlése
+
+
+A pizzás feladat még közepes szint. Ennél nehezebb dolgozatban simán lehet:
+
+
+DataGridView feltöltés fájlból
+
+
+összesítés / szűrés / keresés
+
+
+kiválasztott sor módosítása
+
+
+fájl + adatbázis együtt
+
+
+lekérdezés eredményének megjelenítése
+
+
+többféle ellenőrzés
+
+
+dinamikusan létrehozott vezérlők
+
+
+több táblás SQL lekérdezés
+
+
+Az alapján, amit küldtél, szerintem ilyen típusú feladatokra érdemes ráfeküdni.
+
+Milyen nehezebb feladatokra számíts?
+1. Fájl beolvasása és táblázat feltöltése
+Például egy txt/csv fájl sorai:
+Alma;120;10Körte;200;5Barack;180;7
+Ebből kell DataGridView-be betölteni.
+using System.IO;private void buttonBetolt_Click(object sender, EventArgs e){    OpenFileDialog ofd = new OpenFileDialog();    ofd.Filter = "Szövegfájl|*.txt|CSV fájl|*.csv";    if (ofd.ShowDialog() == DialogResult.OK)    {        dataGridView1.Rows.Clear();        dataGridView1.Columns.Clear();        dataGridView1.ColumnCount = 3;        dataGridView1.Columns[0].Name = "Név";        dataGridView1.Columns[1].Name = "Ár";        dataGridView1.Columns[2].Name = "Darab";        string[] sorok = File.ReadAllLines(ofd.FileName);        foreach (string sor in sorok)        {            string[] adat = sor.Split(';');            if (adat.Length == 3)            {                dataGridView1.Rows.Add(adat[0], adat[1], adat[2]);            }        }    }}
+
+2. Összeg számítása DataGridView alapján
+Nagyon gyakori: ár * darab, végén összesen.
+private void buttonSzamol_Click(object sender, EventArgs e){    int osszeg = 0;    foreach (DataGridViewRow row in dataGridView1.Rows)    {        if (!row.IsNewRow)        {            int ar = Convert.ToInt32(row.Cells[1].Value);            int db = Convert.ToInt32(row.Cells[2].Value);            osszeg += ar * db;        }    }    textBoxOsszeg.Text = osszeg.ToString();}
+
+3. Ellenőrzés, hogy tényleg szám-e
+Ez dolgozaton majdnem biztosan kell.
+private bool PozitivEgesz(string szoveg){    int szam;    return int.TryParse(szoveg, out szam) && szam > 0;}
+Használat:
+if (!PozitivEgesz(textBoxDb.Text)){    MessageBox.Show("A darabszám legyen pozitív egész szám!");    return;}
+
+4. Kiválasztott sor adatainak betöltése TextBoxba
+private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e){    if (dataGridView1.CurrentRow != null && !dataGridView1.CurrentRow.IsNewRow)    {        textBoxNev.Text = dataGridView1.CurrentRow.Cells[0].Value.ToString();        textBoxAr.Text = dataGridView1.CurrentRow.Cells[1].Value.ToString();        textBoxDb.Text = dataGridView1.CurrentRow.Cells[2].Value.ToString();    }}
+
+5. Kiválasztott sor módosítása
+private void buttonModosit_Click(object sender, EventArgs e){    if (dataGridView1.CurrentRow != null && !dataGridView1.CurrentRow.IsNewRow)    {        dataGridView1.CurrentRow.Cells[0].Value = textBoxNev.Text;        dataGridView1.CurrentRow.Cells[1].Value = textBoxAr.Text;        dataGridView1.CurrentRow.Cells[2].Value = textBoxDb.Text;    }}
+
+6. Kijelölt sor törlése
+private void buttonTorolSor_Click(object sender, EventArgs e){    if (dataGridView1.SelectedRows.Count > 0)    {        dataGridView1.Rows.Remove(dataGridView1.SelectedRows[0]);    }    else    {        MessageBox.Show("Nincs kijelölt sor!");    }}
+
+SQL-es nehezebb minták
+Ha dolgozatban SQL is lesz, akkor ezek nagyon fontosak.
+7. Adatbázisból DataGridView feltöltése
+using System.Data;using System.Data.SqlClient;string connectionString = "Server=.;Database=Rendelesek;Trusted_Connection=True;";private void buttonSqlBetolt_Click(object sender, EventArgs e){    using (SqlConnection conn = new SqlConnection(connectionString))    {        string query = "SELECT * FROM Termekek";        SqlDataAdapter adapter = new SqlDataAdapter(query, conn);        DataTable dt = new DataTable();        adapter.Fill(dt);        dataGridView1.DataSource = dt;    }}
+
+8. Keresés név alapján SQL-ben
+private void buttonKeres_Click(object sender, EventArgs e){    using (SqlConnection conn = new SqlConnection(connectionString))    {        string query = "SELECT * FROM Termekek WHERE Nev LIKE @nev";        SqlDataAdapter adapter = new SqlDataAdapter(query, conn);        adapter.SelectCommand.Parameters.AddWithValue("@nev", "%" + textBoxKeres.Text + "%");        DataTable dt = new DataTable();        adapter.Fill(dt);        dataGridView1.DataSource = dt;    }}
+
+9. INSERT adatbázisba
+private void buttonMent_Click(object sender, EventArgs e){    using (SqlConnection conn = new SqlConnection(connectionString))    {        string query = "INSERT INTO Termekek (Nev, Ar, Darab) VALUES (@nev, @ar, @db)";        SqlCommand cmd = new SqlCommand(query, conn);        cmd.Parameters.AddWithValue("@nev", textBoxNev.Text);        cmd.Parameters.AddWithValue("@ar", int.Parse(textBoxAr.Text));        cmd.Parameters.AddWithValue("@db", int.Parse(textBoxDb.Text));        conn.Open();        cmd.ExecuteNonQuery();        conn.Close();    }    MessageBox.Show("Sikeres mentés!");}
+
+10. UPDATE adatbázisban
+private void buttonUpdate_Click(object sender, EventArgs e){    using (SqlConnection conn = new SqlConnection(connectionString))    {        string query = "UPDATE Termekek SET Nev=@nev, Ar=@ar, Darab=@db WHERE Id=@id";        SqlCommand cmd = new SqlCommand(query, conn);        cmd.Parameters.AddWithValue("@nev", textBoxNev.Text);        cmd.Parameters.AddWithValue("@ar", int.Parse(textBoxAr.Text));        cmd.Parameters.AddWithValue("@db", int.Parse(textBoxDb.Text));        cmd.Parameters.AddWithValue("@id", int.Parse(textBoxId.Text));        conn.Open();        cmd.ExecuteNonQuery();        conn.Close();    }    MessageBox.Show("Sikeres módosítás!");}
+
+11. DELETE adatbázisból
+private void buttonDelete_Click(object sender, EventArgs e){    using (SqlConnection conn = new SqlConnection(connectionString))    {        string query = "DELETE FROM Termekek WHERE Id=@id";        SqlCommand cmd = new SqlCommand(query, conn);        cmd.Parameters.AddWithValue("@id", int.Parse(textBoxId.Text));        conn.Open();        cmd.ExecuteNonQuery();        conn.Close();    }    MessageBox.Show("Sikeres törlés!");}
+
+A pizzás mintához hasonló, de nehezebb logika
+A mintafeladatból látszik, hogy szerethetnek ilyet adni:
+
+
+fájlból jön az adat
+
+
+abból kell felépíteni a működést
+
+
+több választási lehetőség van
+
+
+az eredmény végül számolás
+
+
+Ezért ezt a sablont érdemes tudni:
+12. Fájl beolvasás listába
+List<string> nevek = new List<string>();List<int> arak = new List<int>();private void buttonBeolvas_Click(object sender, EventArgs e){    OpenFileDialog ofd = new OpenFileDialog();    ofd.Filter = "Text fájl|*.txt";    if (ofd.ShowDialog() == DialogResult.OK)    {        string[] sorok = File.ReadAllLines(ofd.FileName);        nevek.Clear();        arak.Clear();        foreach (string sor in sorok)        {            string[] adat = sor.Split(';');            if (adat.Length >= 2)            {                nevek.Add(adat[0]);                arak.Add(int.Parse(adat[1]));            }        }        listBox1.Items.Clear();        for (int i = 0; i < nevek.Count; i++)        {            listBox1.Items.Add(nevek[i] + " - " + arak[i] + " Ft");        }    }}
+
+13. ListBox kiválasztás + darabszám + összeg
+private void buttonOsszeg_Click(object sender, EventArgs e){    if (listBox1.SelectedIndex == -1)    {        MessageBox.Show("Válassz egy elemet!");        return;    }    int db;    if (!int.TryParse(textBoxDb.Text, out db) || db <= 0)    {        MessageBox.Show("Hibás darabszám!");        return;    }    int index = listBox1.SelectedIndex;    int osszeg = arak[index] * db;    textBoxOsszeg.Text = osszeg.ToString() + " Ft";}
+
+Mire figyelj dolgozaton?
+Tipikus buktatók
+1. Split(';') után nincs elég adat
+Ezért mindig nézd:
+if (adat.Length == 3){    ...}
+2. int.Parse() hibát dobhat
+Biztonságosabb:
+int szam;if (int.TryParse(textBox1.Text, out szam)){    // jó}else{    MessageBox.Show("Nem szám!");}
+3. DataGridView-ben van új sor
+Ezért kell:
+if (!row.IsNewRow){    ...}
+4. Nincs kijelölés
+Mindig ellenőrizd:
+if (dataGridView1.CurrentRow == null){    MessageBox.Show("Nincs kijelölve sor!");    return;}
+
+Szerintem ilyen szintű nehezebb feladatokra készüljetek
+A. Fájl -> DataGridView -> összegzés
+Például:
+
+
+beolvasás
+
+
+feltöltés
+
+
+kiválasztás
+
+
+összesítés
+
+
+B. SQL -> lekérdezés -> szűrés -> módosítás
+Például:
+
+
+betöltés adatbázisból
+
+
+keresés név szerint
+
+
+sor beszúrása
+
+
+sor törlése
+
+
+C. Vegyes
+Például:
+
+
+fájlból betöltöd az adatokat
+
+
+megjeleníted
+
+
+elmented SQL-be
+
+
+majd lekérdezed és szűröd
+
+
+Ez már simán lehet „sokkal nehezebb” kategória.
+
+Gyors vizsgás puska: mit tudj kívülről?
+Fájl beolvasás
+string[] sorok = File.ReadAllLines(fajlNev);
+Darabolás
+string[] adat = sor.Split(';');
+Szám ellenőrzés
+int.TryParse(textBox1.Text, out szam)
+Tábla sor hozzáadás
+dataGridView1.Rows.Add(...);
+SQL SELECT
+SqlDataAdapter adapter = new SqlDataAdapter(query, conn);DataTable dt = new DataTable();adapter.Fill(dt);dataGridView1.DataSource = dt;
+SQL INSERT/UPDATE/DELETE
+cmd.ExecuteNonQuery();
+
+Amit most a legjobban érdemes gyakorolnod
+A te helyedben ezt a 4-et nyomnám át:
+
+
+txt/csv fájl beolvasása
+
+
+DataGridView feltöltése és sor műveletek
+
+
+TryParse, ellenőrzések
+
+
+SQL SELECT + INSERT + UPDATE + DELETE
+
+
+Mert ebből nagyon sok feladat összerakható.
+A következő üzenetben összerakom neked egyben egy komplett nehezebb mintadolgozatot feladatszöveggel és teljes WinForms C# megoldással.
