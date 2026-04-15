@@ -1,0 +1,414 @@
+Beolvasás
+using System.IO;
+
+private void buttonBeolvas_Click(object sender, EventArgs e)
+{
+    string[] sorok = File.ReadAllLines("adatok.txt");
+
+    foreach (string sor in sorok)
+    {
+        MessageBox.Show(sor);
+    }
+}
+
+
+2. Txt beolvasás és ListBox feltöltés
+private void buttonBeolvas_Click(object sender, EventArgs e)
+{
+    listBox1.Items.Clear();
+
+    string[] sorok = File.ReadAllLines("adatok.txt");
+
+    foreach (string sor in sorok)
+    {
+        listBox1.Items.Add(sor);
+    }
+}
+
+
+3. Txt beolvasás és DataGridView feltöltés
+
+Ez már nagyon fontos.
+
+Formátum:
+Anna;18;Budapest
+Béla;20;Szeged
+Csilla;19;Pécs
+Kód:
+private void buttonBetoltTabla_Click(object sender, EventArgs e)
+{
+    dataGridView1.Rows.Clear();
+    dataGridView1.Columns.Clear();
+
+    dataGridView1.ColumnCount = 3;
+    dataGridView1.Columns[0].Name = "Név";
+    dataGridView1.Columns[1].Name = "Kor";
+    dataGridView1.Columns[2].Name = "Város";
+
+    string[] sorok = File.ReadAllLines("adatok.txt");
+
+    foreach (string sor in sorok)
+    {
+        string[] adatok = sor.Split(';');
+
+        if (adatok.Length == 3)
+        {
+            dataGridView1.Rows.Add(adatok[0], adatok[1], adatok[2]);
+        }
+    }
+}
+
+
+
+
+4. OpenFileDialog-os txt beolvasás
+
+Ha nem fix fájlnév kell, hanem a felhasználó választja ki:
+
+private void buttonFajlValaszt_Click(object sender, EventArgs e)
+{
+    OpenFileDialog ofd = new OpenFileDialog();
+    ofd.Filter = "Szövegfájlok|*.txt";
+
+    if (ofd.ShowDialog() == DialogResult.OK)
+    {
+        string[] sorok = File.ReadAllLines(ofd.FileName);
+
+        dataGridView1.Rows.Clear();
+        dataGridView1.Columns.Clear();
+
+        dataGridView1.ColumnCount = 3;
+        dataGridView1.Columns[0].Name = "Név";
+        dataGridView1.Columns[1].Name = "Kor";
+        dataGridView1.Columns[2].Name = "Város";
+
+        foreach (string sor in sorok)
+        {
+            string[] adatok = sor.Split(';');
+
+            if (adatok.Length == 3)
+            {
+                dataGridView1.Rows.Add(adatok[0], adatok[1], adatok[2]);
+            }
+        }
+    }
+}
+
+
+5. Lekérdezés txt-ből: keresés név alapján
+
+Példa: a txt-ben vannak az adatok, és a textBoxKeres mező alapján meg kell keresni egy nevet.
+
+private void buttonKeres_Click(object sender, EventArgs e)
+{
+    listBox1.Items.Clear();
+
+    string[] sorok = File.ReadAllLines("adatok.txt");
+    string keresettNev = textBoxKeres.Text.ToLower();
+
+    foreach (string sor in sorok)
+    {
+        string[] adatok = sor.Split(';');
+
+        if (adatok.Length == 3)
+        {
+            if (adatok[0].ToLower().Contains(keresettNev))
+            {
+                listBox1.Items.Add(sor);
+            }
+        }
+    }
+}
+
+Ez a fájlban keres, nem SQL-ben.
+
+
+
+6. Lekérdezés txt-ből és DataGridView-be csak a találatok
+private void buttonSzures_Click(object sender, EventArgs e)
+{
+    dataGridView1.Rows.Clear();
+    dataGridView1.Columns.Clear();
+
+    dataGridView1.ColumnCount = 3;
+    dataGridView1.Columns[0].Name = "Név";
+    dataGridView1.Columns[1].Name = "Kor";
+    dataGridView1.Columns[2].Name = "Város";
+
+    string[] sorok = File.ReadAllLines("adatok.txt");
+    string keresettVaros = textBoxVaros.Text.ToLower();
+
+    foreach (string sor in sorok)
+    {
+        string[] adatok = sor.Split(';');
+
+        if (adatok.Length == 3)
+        {
+            if (adatok[2].ToLower() == keresettVaros)
+            {
+                dataGridView1.Rows.Add(adatok[0], adatok[1], adatok[2]);
+            }
+        }
+    }
+}
+
+
+7. Txt beolvasás és összegzés
+
+Most legyen ilyen a fájl:
+
+Alma;300;2
+Körte;250;4
+Banán;500;3
+
+Jelentés:
+
+termék neve
+ár
+darab
+
+Feladat: teljes összeg kiszámítása.
+
+private void buttonOsszeg_Click(object sender, EventArgs e)
+{
+    string[] sorok = File.ReadAllLines("termekek.txt");
+    int vegosszeg = 0;
+
+    foreach (string sor in sorok)
+    {
+        string[] adatok = sor.Split(';');
+
+        if (adatok.Length == 3)
+        {
+            int ar = int.Parse(adatok[1]);
+            int db = int.Parse(adatok[2]);
+
+            vegosszeg += ar * db;
+        }
+    }
+
+    label1.Text = "Végösszeg: " + vegosszeg + " Ft";
+}
+
+8. Txt beolvasás és csak a 18 év felettiek táblába
+
+Fájl:
+
+Anna;18;Budapest
+Béla;20;Szeged
+Csilla;17;Pécs
+Dani;25;Győr
+
+Kód:
+
+private void buttonFelnottek_Click(object sender, EventArgs e)
+{
+    dataGridView1.Rows.Clear();
+    dataGridView1.Columns.Clear();
+
+    dataGridView1.ColumnCount = 3;
+    dataGridView1.Columns[0].Name = "Név";
+    dataGridView1.Columns[1].Name = "Kor";
+    dataGridView1.Columns[2].Name = "Város";
+
+    string[] sorok = File.ReadAllLines("adatok.txt");
+
+    foreach (string sor in sorok)
+    {
+        string[] adatok = sor.Split(';');
+
+        if (adatok.Length == 3)
+        {
+            int kor = int.Parse(adatok[1]);
+
+            if (kor >= 18)
+            {
+                dataGridView1.Rows.Add(adatok[0], adatok[1], adatok[2]);
+            }
+        }
+    }
+}
+9. Txt-ből betöltés listákba, utána lekérdezés
+
+Ez már kicsit komolyabb, és dolgozatra jó.
+
+List<string> nevek = new List<string>();
+List<int> korok = new List<int>();
+List<string> varosok = new List<string>();
+
+private void buttonBetolt_Click(object sender, EventArgs e)
+{
+    nevek.Clear();
+    korok.Clear();
+    varosok.Clear();
+
+    string[] sorok = File.ReadAllLines("adatok.txt");
+
+    foreach (string sor in sorok)
+    {
+        string[] adatok = sor.Split(';');
+
+        if (adatok.Length == 3)
+        {
+            nevek.Add(adatok[0]);
+            korok.Add(int.Parse(adatok[1]));
+            varosok.Add(adatok[2]);
+        }
+    }
+
+    MessageBox.Show("Beolvasás kész!");
+}
+
+Lekérdezés például név alapján:
+
+private void buttonKeres_Click(object sender, EventArgs e)
+{
+    listBox1.Items.Clear();
+
+    for (int i = 0; i < nevek.Count; i++)
+    {
+        if (nevek[i].ToLower().Contains(textBoxKeres.Text.ToLower()))
+        {
+            listBox1.Items.Add(nevek[i] + " - " + korok[i] + " - " + varosok[i]);
+        }
+    }
+}
+10. Txt-ből betöltés és TextBox-ok feltöltése kiválasztáskor
+
+Ha ListBox-ba töltötted a neveket, és kiválasztáskor jelenjen meg a többi adat:
+
+private void buttonBetolt_Click(object sender, EventArgs e){    listBox1.Items.Clear();    nevek.Clear();    korok.Clear();    varosok.Clear();    string[] sorok = File.ReadAllLines("adatok.txt");    foreach (string sor in sorok)    {        string[] adatok = sor.Split(';');        if (adatok.Length == 3)        {            nevek.Add(adatok[0]);            korok.Add(int.Parse(adatok[1]));            varosok.Add(adatok[2]);            listBox1.Items.Add(adatok[0]);        }    }}
+private void listBox1_SelectedIndexChanged(object sender, EventArgs e){    int index = listBox1.SelectedIndex;    if (index != -1)    {        textBoxNev.Text = nevek[index];        textBoxKor.Text = korok[index].ToString();        textBoxVaros.Text = varosok[index];    }}
+
+11. Txt fájlba mentés DataGridView-ből
+Ez is gyakori.
+using System.IO;private void buttonMentes_Click(object sender, EventArgs e){    StreamWriter sw = new StreamWriter("mentett_adatok.txt");    foreach (DataGridViewRow row in dataGridView1.Rows)    {        if (!row.IsNewRow)        {            string nev = row.Cells[0].Value.ToString();            string kor = row.Cells[1].Value.ToString();            string varos = row.Cells[2].Value.ToString();            sw.WriteLine(nev + ";" + kor + ";" + varos);        }    }    sw.Close();    MessageBox.Show("Mentés kész!");}
+
+12. Txt-ből betöltés + új adat felvitele táblába
+private void buttonHozzaad_Click(object sender, EventArgs e){    dataGridView1.Rows.Add(textBoxNev.Text, textBoxKor.Text, textBoxVaros.Text);}
+Ha előtte a táblát már feltöltötted txt-ből, akkor ez hozzátesz új sort.
+
+13. Kompakt, dolgozatos komplett példa
+Ez az egyik leghasznosabb minta.
+Fájl:
+Anna;18;BudapestBéla;20;SzegedCsilla;19;Pécs
+Feladat:
+
+
+fájl beolvasása
+
+
+táblába töltés
+
+
+keresés város alapján
+
+
+private void buttonBetolt_Click(object sender, EventArgs e){    dataGridView1.Rows.Clear();    dataGridView1.Columns.Clear();    dataGridView1.ColumnCount = 3;    dataGridView1.Columns[0].Name = "Név";    dataGridView1.Columns[1].Name = "Kor";    dataGridView1.Columns[2].Name = "Város";    string[] sorok = File.ReadAllLines("adatok.txt");    foreach (string sor in sorok)    {        string[] adatok = sor.Split(';');        if (adatok.Length == 3)        {            dataGridView1.Rows.Add(adatok[0], adatok[1], adatok[2]);        }    }}
+private void buttonKeres_Click(object sender, EventArgs e){    string keresettVaros = textBoxVaros.Text.ToLower();    foreach (DataGridViewRow row in dataGridView1.Rows)    {        if (!row.IsNewRow)        {            string varos = row.Cells[2].Value.ToString().ToLower();            if (varos == keresettVaros)            {                row.Selected = true;            }        }    }}
+
+14. Alap hibakezelés txt beolvasáshoz
+Ez nagyon hasznos.
+private void buttonBeolvas_Click(object sender, EventArgs e){    try    {        string[] sorok = File.ReadAllLines("adatok.txt");        listBox1.Items.Clear();        foreach (string sor in sorok)        {            listBox1.Items.Add(sor);        }    }    catch (Exception ex)    {        MessageBox.Show("Hiba: " + ex.Message);    }}
+
+15. Biztonságos számkonvertálás txt-ből
+int.Parse() helyett:
+foreach (string sor in File.ReadAllLines("adatok.txt")){    string[] adatok = sor.Split(';');    if (adatok.Length == 3)    {        int kor;        if (int.TryParse(adatok[1], out kor))        {            dataGridView1.Rows.Add(adatok[0], kor, adatok[2]);        }    }}
+
+Legfontosabb minták, amit érdemes megjegyezni
+Txt soronként:
+string[] sorok = File.ReadAllLines("adatok.txt");
+Sor feldarabolása:
+string[] adatok = sor.Split(';');
+Táblába sor:
+dataGridView1.Rows.Add(adatok[0], adatok[1], adatok[2]);
+Keresés:
+if (adatok[0].ToLower().Contains(textBox1.Text.ToLower()))
+Szám:
+int szam;int.TryParse(adatok[1], out szam);
+
+Ha ilyen feladat jön, így gondolkodj
+Példa feladat:
+„Olvassa be a tanulok.txt állományt, és töltse fel a táblázatot.”
+Lépések:
+
+
+File.ReadAllLines
+
+
+foreach
+
+
+Split(';')
+
+
+Rows.Add(...)
+
+
+Példa feladat:
+„Keresse ki a budapesti tanulókat.”
+Lépések:
+
+
+beolvasott sorok vagy tábla végigjárása
+
+
+város mező ellenőrzése
+
+
+találatok kiírása
+
+
+Példa feladat:
+„Számolja ki az összes rendelés értékét.”
+Lépések:
+
+
+sor beolvasása
+
+
+ár + darab kiolvasása
+
+
+szorzás
+
+
+összegzés
+
+
+
+Mini puska, nagyon röviden
+string[] sorok = File.ReadAllLines("adatok.txt");foreach (string sor in sorok){    string[] adatok = sor.Split(';');    if (adatok.Length == 3)    {        dataGridView1.Rows.Add(adatok[0], adatok[1], adatok[2]);    }}
+Keresés:
+if (adatok[0].ToLower().Contains(textBox1.Text.ToLower())){    listBox1.Items.Add(sor);}
+Összegzés:
+osszeg += int.Parse(adatok[1]) * int.Parse(adatok[2]);
+
+A következő üzenetben össze tudok rakni neked egy komplett mintadolgozatot txt fájllal, például:
+
+
+feladatszöveg
+
+
+Form elemek
+
+
+teljes megoldás
+
+
+keresés
+
+
+táblázat feltöltés
+
+
+összegzés
+
+
+törlés
+
+
+mentés
+
+
+Ez már tényleg vizsgára gyakorolható lenne.
