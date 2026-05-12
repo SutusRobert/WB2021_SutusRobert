@@ -1,0 +1,344 @@
+1. Kártyák címének színe az offers oldalon
+
+Feladat:
+
+Az ingatlan kínálat oldalon a kártyák címe legyen ugyanolyan színű, mint az oldal háttérszíne.
+
+A style.css végére:
+
+.offers .card-title {
+    color: var(--bs-body-bg);
+}
+
+Ha nincs .offers osztály az oldalon, akkor használható egyszerűbben:
+
+.card-title {
+    color: var(--bs-body-bg);
+}
+
+Vagy ha konkrét háttérszín van, például fehér:
+
+.card-title {
+    color: white;
+}
+2. Aktív menüpont színe és félkövérsége
+
+Feladat:
+
+Aktív menüpont színe: RGB(71, 71, 150)
+Félkövér legyen
+
+A style.css végére:
+
+.navbar .nav-link.active {
+    color: rgb(71, 71, 150) !important;
+    font-weight: bold;
+}
+
+Ha nem Bootstrap nav-link active van, hanem például csak active:
+
+.navbar .active {
+    color: rgb(71, 71, 150) !important;
+    font-weight: bold;
+}
+3. Start háttérkép javítása
+
+Feladat:
+
+A start osztály háttérképe ne ismétlődjön, és töltse ki a keretet.
+
+A style.css végére:
+
+.start {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+Ez megoldja:
+
+ne ismétlődjön
+kitöltse a területet
+középen legyen
+4. Kezdőoldali gombok linkelése
+
+index.html fájlban keresd meg a két gombot.
+
+Valami ilyesmi lehet:
+
+<button class="btn btn-primary">Nézze meg kínálatunkat</button>
+<button class="btn btn-secondary">Hirdessen nálunk!</button>
+
+Cseréld erre:
+
+<a href="offers.html" class="btn btn-primary">
+    Nézze meg kínálatunkat
+</a>
+
+<a href="newad.html" class="btn btn-secondary">
+    Hirdessen nálunk!
+</a>
+
+Fontos:
+
+Azonos lapon nyíljon meg, ezért nem kell target="_blank".
+5. newad.html menü középre igazítása
+
+Ha a menü nincs középen, keresd meg a nav részt.
+
+Példa Bootstrap esetén:
+
+<ul class="navbar-nav">
+
+Legyen:
+
+<ul class="navbar-nav mx-auto">
+
+Vagy ha divben van:
+
+<div class="navbar-nav mx-auto">
+
+A mx-auto középre húzza a menüt.
+
+Ha nem Bootstrapes megoldás van, CSS-ben:
+
+.navbar-nav {
+    margin-left: auto;
+    margin-right: auto;
+}
+6. Dátum script hiba javítása
+
+Hiba:
+
+Uncaught TypeError: document.querySelector(...) is null
+
+Ez azt jelenti:
+
+A JavaScript olyan elemet keres, ami nincs az oldalon.
+
+Példa hibás script:
+
+<script>
+    document.querySelector('#date').value = new Date().toISOString().split('T')[0];
+</script>
+
+De ha az input id-ja nem date, akkor null lesz.
+
+Javítás
+
+A dátum mezőnek legyen azonosítója:
+
+<input type="date" id="hirdetesDatuma" class="form-control">
+
+A script pedig ezt keresse:
+
+<script>
+    document.querySelector('#hirdetesDatuma').value =
+        new Date().toISOString().split('T')[0];
+</script>
+
+Még jobb, biztonságosabb megoldás:
+
+<script>
+    const datumMezo = document.querySelector('#hirdetesDatuma');
+
+    if (datumMezo) {
+        datumMezo.value = new Date().toISOString().split('T')[0];
+    }
+</script>
+7. Új hirdetés beszúrása az offers.html oldalra
+
+Feladat:
+
+A két ház után szúrj be egy újabb hirdetést.
+Az adatok a lakas.txt fájlban vannak.
+
+Az offers.html fájlban keresd meg a kártyákat.
+
+Példa kártya:
+
+<div class="card">
+    <img src="..." class="card-img-top" alt="...">
+    <div class="card-body">
+        <h5 class="card-title">Ház 2022-02-24</h5>
+        <p class="card-text">Leírás...</p>
+        <p>Tehermentes: igen</p>
+    </div>
+</div>
+
+A két ház után szúrj be egy újat a lakas.txt adataival.
+
+Minta szerkezet:
+
+<div class="col-md-4">
+    <div class="card h-100">
+        <img src="KEP_URL" class="card-img-top" alt="Lakás">
+        <div class="card-body">
+            <h5 class="card-title">Lakás DÁTUM</h5>
+            <p class="card-text">
+                LEÍRÁS
+            </p>
+            <p>
+                <strong>Tehermentes:</strong> Igen
+            </p>
+        </div>
+    </div>
+</div>
+
+A lakas.txt adataiból cseréld ki:
+
+KEP_URL
+DÁTUM
+LEÍRÁS
+Tehermentes érték
+8. Új URL mező a newad.html oldalon
+
+Feladat:
+
+Címke: Fénykép az ingatlanról
+Típus: url
+Stílusa egyezzen a többi mezővel
+
+Keresd meg a formot a newad.html oldalon, majd a többi mező közé szúrd be:
+
+<div class="mb-3">
+    <label for="kepUrl" class="form-label">
+        Fénykép az ingatlanról
+    </label>
+    <input
+        type="url"
+        class="form-control"
+        id="kepUrl"
+        name="kepUrl"
+        required
+    >
+</div>
+
+Ha a többi mező nem Bootstrapes, hanem például ilyen:
+
+<div class="form-group">
+
+Akkor ehhez igazítsd:
+
+<div class="form-group">
+    <label for="kepUrl">Fénykép az ingatlanról</label>
+    <input type="url" id="kepUrl" name="kepUrl">
+</div>
+9. Aktív menüpont beállítása HTML-ben
+
+Mindhárom oldalon más link legyen aktív.
+
+index.html
+<a class="nav-link active" href="index.html">Kezdőlap</a>
+<a class="nav-link" href="offers.html">Kínálat</a>
+<a class="nav-link" href="newad.html">Új hirdetés</a>
+offers.html
+<a class="nav-link" href="index.html">Kezdőlap</a>
+<a class="nav-link active" href="offers.html">Kínálat</a>
+<a class="nav-link" href="newad.html">Új hirdetés</a>
+newad.html
+<a class="nav-link" href="index.html">Kezdőlap</a>
+<a class="nav-link" href="offers.html">Kínálat</a>
+<a class="nav-link active" href="newad.html">Új hirdetés</a>
+10. Teljes CSS rész, amit a style.css végére írnék
+/* 1. offers oldali kártyacímek színe */
+.offers .card-title {
+    color: var(--bs-body-bg);
+}
+
+/* 2. aktív menüpont */
+.navbar .nav-link.active {
+    color: rgb(71, 71, 150) !important;
+    font-weight: bold;
+}
+
+/* 3. start háttérkép */
+.start {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+/* 5. newad menü középre */
+.navbar-nav {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+Ha az offers.html body-ján nincs offers osztály, akkor tegyél rá:
+
+<body class="offers">
+
+Vagy használd ezt:
+
+.card-title {
+    color: var(--bs-body-bg);
+}
+11. Ellenőrzőlista
+[ ] style.css végére írtad az új szabályokat
+[ ] kártyák címe az offers oldalon megfelelő színű
+[ ] aktív menüpont RGB(71,71,150)
+[ ] aktív menüpont félkövér
+[ ] start háttérkép nem ismétlődik
+[ ] start háttérkép kitölti a keretet
+[ ] index.html első gomb offers.html-re visz
+[ ] index.html második gomb newad.html-re visz
+[ ] newad.html menü középen van
+[ ] dátum input id-ja egyezik a querySelectorral
+[ ] nincs konzolhiba
+[ ] offers.html-ben bekerült az új lakás hirdetés
+[ ] newad.html-ben van URL típusú kép mező
+[ ] új mező stílusa egyezik a többivel
+12. Gyakori hibák
+A gomb nem navigál
+
+Rossz:
+
+<button href="offers.html">...</button>
+
+Jó:
+
+<a href="offers.html" class="btn btn-primary">...</a>
+A dátum script hibázik
+
+Rossz:
+
+document.querySelector('#date')
+
+De az input:
+
+<input id="hirdetesDatuma">
+
+A kettőnek egyeznie kell.
+
+A kártyacím CSS nem működik
+
+Lehet, hogy nincs ilyen osztály:
+
+<body class="offers">
+
+Akkor vagy add hozzá, vagy használd általánosan:
+
+.card-title {
+    color: var(--bs-body-bg);
+}
+A newad menü nincs középen
+
+Bootstrap esetén erre figyelj:
+
+<ul class="navbar-nav mx-auto">
+13. Rövid vizsgás sorrend
+1. index.html, newad.html, offers.html, style.css megnyitása
+2. style.css végére új szelektorok
+3. card-title szín beállítása
+4. active nav-link szín + bold
+5. start background-repeat és background-size
+6. index gombok átalakítása linkké
+7. newad menü középre igazítása
+8. dátum input id + script javítása
+9. offers oldalon új lakás kártya beszúrása
+10. newad oldalon kép URL mező beszúrása
+11. böngészőben tesztelés
+12. konzolhiba ellenőrzése F12-ben
+
+Ez a jegyzet jó alap a statikus, reszponzív HTML/CSS/JS feladathoz.
