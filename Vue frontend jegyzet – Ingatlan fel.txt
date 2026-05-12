@@ -1,0 +1,566 @@
+Vue frontend jegyzet – Ingatlan feladat
+1. Backend szerver indítása
+
+A projekt backend mappájából indítsd el:
+
+IngatlanWebAPI.exe
+
+A szerver címe:
+
+http://localhost:5000
+
+API dokumentáció:
+
+http://localhost:5000/docs
+2. Vue projekt létrehozása
+npm create vue@latest Sutus_Robert_frontend
+cd Sutus_Robert_frontend
+npm install
+
+Telepítésnél legyen:
+
+Vue Router: Yes
+Pinia: No
+Vitest: No
+ESLint: Optional
+
+Indítás:
+
+npm run dev
+3. Bootstrap hozzáadása
+npm install bootstrap
+
+src/main.js fájlba:
+
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
+
+createApp(App).use(router).mount('#app')
+4. Axios telepítése
+
+Az API hívásokhoz:
+
+npm install axios
+5. Mappa struktúra
+
+Ezt érdemes kialakítani:
+
+src/
+ ├─ assets/
+ │   └─ real-estate-agent.png
+ ├─ components/
+ ├─ views/
+ │   ├─ OpenPage.vue
+ │   ├─ OffersView.vue
+ │   └─ NewAdView.vue
+ ├─ router/
+ │   └─ index.js
+ ├─ App.vue
+ └─ main.js
+
+A képet másold ide:
+
+src/assets/real-estate-agent.png
+6. Route-ok beállítása
+
+src/router/index.js
+
+import { createRouter, createWebHistory } from 'vue-router'
+
+import OpenPage from '../views/OpenPage.vue'
+import OffersView from '../views/OffersView.vue'
+import NewAdView from '../views/NewAdView.vue'
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    {
+      path: '/',
+      name: 'openpage',
+      component: OpenPage
+    },
+    {
+      path: '/offers',
+      name: 'offers',
+      component: OffersView
+    },
+    {
+      path: '/newad',
+      name: 'newad',
+      component: NewAdView
+    }
+  ]
+})
+
+export default router
+
+Kötelező útvonalak:
+
+/        kezdőoldal
+/offers  hirdetések listája
+/newad   új hirdetés feladása
+7. App.vue
+
+src/App.vue
+
+<template>
+  <RouterView />
+</template>
+8. Kezdőoldal komponens
+
+src/views/OpenPage.vue
+
+<template>
+  <div class="open-page">
+    <div class="container">
+      <div class="content-box">
+        <h1>Álomotthon ingatlaniroda</h1>
+
+        <p>
+          Találja meg nálunk új otthonát, vagy adja fel saját hirdetését!
+        </p>
+
+        <div class="buttons">
+          <RouterLink to="/offers" class="btn btn-primary me-3">
+            Nézze meg kínálatunkat
+          </RouterLink>
+
+          <RouterLink to="/newad" class="btn btn-success">
+            Hirdessen nálunk!
+          </RouterLink>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.open-page {
+  min-height: 100vh;
+  background-image: url('../assets/real-estate-agent.png');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+}
+
+.content-box {
+  max-width: 600px;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 40px;
+  border-radius: 15px;
+}
+
+h1 {
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+p {
+  font-size: 20px;
+  margin-bottom: 30px;
+}
+</style>
+
+Fontos gombok:
+
+Nézze meg kínálatunkat -> /offers
+Hirdessen nálunk! -> /newad
+9. Hirdetések megjelenítése komponens
+
+Ez kéri le:
+
+GET http://localhost:5000/api/ingatlan
+
+src/views/OffersView.vue
+
+<template>
+  <div class="container my-5">
+    <h1 class="mb-4">Aktuális ajánlataink</h1>
+
+    <RouterLink to="/" class="btn btn-secondary mb-3">
+      Vissza a főoldalra
+    </RouterLink>
+
+    <table class="table table-striped table-bordered align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Kategória</th>
+          <th>Leírás</th>
+          <th>Hirdetés dátuma</th>
+          <th>Tehermentes</th>
+          <th>Kép</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr v-for="ingatlan in ingatlanok" :key="ingatlan.id">
+          <td>{{ ingatlan.kategoriaNev }}</td>
+          <td>{{ ingatlan.leiras }}</td>
+          <td>{{ ingatlan.hirdetesDatuma }}</td>
+          <td>
+            <span v-if="ingatlan.tehermentes" class="badge bg-success">
+              Igen
+            </span>
+            <span v-else class="badge bg-danger">
+              Nem
+            </span>
+          </td>
+          <td>
+            <img
+              :src="ingatlan.kepUrl"
+              alt="Ingatlan képe"
+              class="property-img"
+            >
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div v-if="hiba" class="alert alert-danger mt-3">
+      {{ hiba }}
+    </div>
+  </div>
+</template>
+
+<script>
+import axios from 'axios'
+
+export default {
+  name: 'OffersView',
+
+  data() {
+    return {
+      ingatlanok: [],
+      hiba: ''
+    }
+  },
+
+  mounted() {
+    this.ingatlanokLekerese()
+  },
+
+  methods: {
+    async ingatlanokLekerese() {
+      try {
+        const response = await axios.get('http://localhost:5000/api/ingatlan')
+        this.ingatlanok = response.data
+      } catch (error) {
+        this.hiba = 'Hiba történt az ingatlanok lekérésekor.'
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+.property-img {
+  width: 120px;
+  height: 80px;
+  object-fit: cover;
+}
+</style>
+10. Új hirdetés komponens
+
+Ez kell hozzá:
+
+GET  /api/kategoriak
+POST /api/ujingatlan
+
+src/views/NewAdView.vue
+
+<template>
+  <div class="container my-5">
+    <h1 class="mb-4">Új hirdetés feladása</h1>
+
+    <RouterLink to="/" class="btn btn-secondary mb-3">
+      Vissza a főoldalra
+    </RouterLink>
+
+    <form @submit.prevent="hirdetesFeladasa" class="card p-4">
+      <div class="mb-3">
+        <label class="form-label">Ingatlan típusa</label>
+        <select
+          v-model="ujIngatlan.kategoriaId"
+          class="form-select"
+          required
+        >
+          <option value="">Válasszon kategóriát</option>
+          <option
+            v-for="kategoria in kategoriak"
+            :key="kategoria.id"
+            :value="kategoria.id"
+          >
+            {{ kategoria.megnevezes }}
+          </option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Leírás</label>
+        <textarea
+          v-model="ujIngatlan.leiras"
+          class="form-control"
+          rows="4"
+          required
+        ></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Hirdetés dátuma</label>
+        <input
+          v-model="ujIngatlan.hirdetesDatuma"
+          type="date"
+          class="form-control"
+          readonly
+        >
+      </div>
+
+      <div class="mb-3 form-check">
+        <input
+          v-model="ujIngatlan.tehermentes"
+          type="checkbox"
+          class="form-check-input"
+          id="tehermentes"
+        >
+        <label class="form-check-label" for="tehermentes">
+          Tehermentes
+        </label>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Kép URL</label>
+        <input
+          v-model="ujIngatlan.kepUrl"
+          type="url"
+          class="form-control"
+          required
+        >
+      </div>
+
+      <button type="submit" class="btn btn-success">
+        Hirdetés feladása
+      </button>
+    </form>
+
+    <div v-if="hiba" class="alert alert-danger mt-3">
+      {{ hiba }}
+    </div>
+  </div>
+</template>
+
+<script>
+import axios from 'axios'
+
+export default {
+  name: 'NewAdView',
+
+  data() {
+    return {
+      kategoriak: [],
+      hiba: '',
+      ujIngatlan: {
+        kategoriaId: '',
+        leiras: '',
+        hirdetesDatuma: '',
+        tehermentes: false,
+        kepUrl: ''
+      }
+    }
+  },
+
+  mounted() {
+    this.maiDatumBeallitasa()
+    this.kategoriakLekerese()
+  },
+
+  methods: {
+    maiDatumBeallitasa() {
+      const today = new Date()
+      this.ujIngatlan.hirdetesDatuma = today.toISOString().split('T')[0]
+    },
+
+    async kategoriakLekerese() {
+      try {
+        const response = await axios.get('http://localhost:5000/api/kategoriak')
+        this.kategoriak = response.data
+      } catch (error) {
+        this.hiba = 'Hiba történt a kategóriák lekérésekor.'
+      }
+    },
+
+    async hirdetesFeladasa() {
+      try {
+        await axios.post(
+          'http://localhost:5000/api/ujingatlan',
+          this.ujIngatlan
+        )
+
+        this.$router.push('/offers')
+      } catch (error) {
+        this.hiba = 'Hiba történt a hirdetés feladása során.'
+      }
+    }
+  }
+}
+</script>
+11. Nagyon fontos dátum formátum
+
+A POST kérésben ez kell:
+
+"hirdetesDatuma": "2022-03-09"
+
+Ezért használjuk:
+
+today.toISOString().split('T')[0]
+
+Ez ilyen formátumot ad:
+
+YYYY-MM-DD
+12. API végpontok, amiket tudni kell
+GET  http://localhost:5000/api/kategoriak
+GET  http://localhost:5000/api/ingatlan
+POST http://localhost:5000/api/ujingatlan
+13. POST kérés szerkezete
+
+A szerver ezt várja:
+
+{
+  "kategoriaId": 1,
+  "leiras": "Szép ház van eladó",
+  "hirdetesDatuma": "2022-03-09",
+  "tehermentes": true,
+  "kepUrl": "http://kep.hu/azenhazam.png"
+}
+
+Ezért a Vue objektum:
+
+ujIngatlan: {
+  kategoriaId: '',
+  leiras: '',
+  hirdetesDatuma: '',
+  tehermentes: false,
+  kepUrl: ''
+}
+14. Külső táblázat komponens megjegyzés
+
+A feladat írja, hogy külső komponenssel jelenítsd meg a táblázatot.
+
+Vizsgán egyszerűbb Bootstrap táblázat is sokszor elfogadható, de ha szigorúan kérik, használhatsz például:
+
+npm install primevue primeicons
+
+De ha nem muszáj, a Bootstrap táblázat gyorsabb és biztonságosabb.
+
+15. Ellenőrzőlista vizsgára
+[ ] Backend szerver elindítva
+[ ] API docs megnyitva: http://localhost:5000/docs
+[ ] Vue projekt létrehozva
+[ ] Bootstrap hozzáadva
+[ ] Axios telepítve
+[ ] Vue Router működik
+[ ] Kezdőoldal komponens kész
+[ ] Háttérkép beállítva: real-estate-agent.png
+[ ] /offers útvonal kész
+[ ] /newad útvonal kész
+[ ] Kezdőoldali gomb /offers-re navigál
+[ ] Kezdőoldali gomb /newad-re navigál
+[ ] Offers oldal lekéri az adatokat /api/ingatlan-ról
+[ ] Offers oldal táblázatban jelenít meg
+[ ] NewAd oldal lekéri a kategóriákat /api/kategoriak-ról
+[ ] Kategóriák select mezőben megjelennek
+[ ] Dátum mező readonly
+[ ] Dátum mező aktuális dátumot kap
+[ ] POST elküldi az adatokat /api/ujingatlan-ra
+[ ] Sikeres POST után átnavigál /offers-re
+[ ] Hiba esetén hibaüzenet jelenik meg
+16. Gyakori hibák
+CORS hiba
+
+Ha ezt látod:
+
+Access to XMLHttpRequest has been blocked by CORS policy
+
+A backend nem engedi a frontend hívást. Vizsgás API-nál általában be van állítva, de ha nem, másik port vagy proxy kellhet.
+
+Nem jelennek meg az adatok
+
+Ellenőrizd:
+
+console.log(response.data)
+
+A lekérés után:
+
+const response = await axios.get('http://localhost:5000/api/ingatlan')
+console.log(response.data)
+Rossz mezőnevek
+
+A szerver ilyen mezőket ad:
+
+ingatlan.kategoriaNev
+ingatlan.leiras
+ingatlan.hirdetesDatuma
+ingatlan.tehermentes
+ingatlan.kepUrl
+
+Ne ezt írd:
+
+ingatlan.kategoria
+ingatlan.kep
+ingatlan.datum
+Select nem működik
+
+A kategóriák mezőnevei:
+
+kategoria.id
+kategoria.megnevezes
+
+Nem:
+
+kategoria.nev
+POST nem működik
+
+Ellenőrizd, hogy pontosan ezek a mezők mennek-e:
+
+{
+  kategoriaId: 1,
+  leiras: '...',
+  hirdetesDatuma: '2022-03-09',
+  tehermentes: true,
+  kepUrl: '...'
+}
+17. Leadás előtti törlés
+
+Tömörítés előtt törölhető:
+
+node_modules
+dist
+
+Ne töröld:
+
+src
+public
+package.json
+package-lock.json
+vite.config.js
+index.html
+
+Tömörítés neve:
+
+Sutus_Robert_frontend.zip
+Rövid vizsgás sorrend
+1. Backend indítása
+2. Vue projekt létrehozása
+3. Bootstrap + Axios telepítés
+4. Router beállítása
+5. OpenPage.vue elkészítése
+6. OffersView.vue elkészítése
+7. NewAdView.vue elkészítése
+8. API hívások tesztelése
+9. Navigációk tesztelése
+10. node_modules törlése
+11. ZIP készítése
