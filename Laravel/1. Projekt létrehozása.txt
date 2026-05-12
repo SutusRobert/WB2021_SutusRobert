@@ -1,0 +1,403 @@
+1. Projekt létrehozása
+composer create-project laravel/laravel Sutus_Robert_backend
+cd Sutus_Robert_backend
+
+Vezeteknev_Keresztnev_backend
+
+CREATE DATABASE ingatlan CHARACTER SET utf8mb4 COLLATE utf8mb4_hungarian_ci;
+
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=ingatlan
+DB_USERNAME=root
+DB_PASSWORD=
+
+3. Modellek és migrationök létrehozása
+
+Két tábla kell:
+
+kategoriak
+ingatlanok
+
+Parancsok:
+
+php artisan make:model Kategoria -m
+php artisan make:model Ingatlan -m
+php artisan make:controller IngatlanController
+php artisan make:seeder KategoriaSeeder
+
+
+4. Migration – kategoriak tábla
+
+database/migrations/...create_kategorias_table.php
+
+public function up(): void
+{
+    Schema::create('kategoriak', function (Blueprint $table) {
+        $table->id();
+        $table->string('nev');
+    });
+}
+
+Fontos: a Laravel alapból többes számot használna, ezért a modelben majd megadjuk a tábla nevét.
+
+5. Migration – ingatlanok tábla
+
+database/migrations/...create_ingatlanok_table.php
+
+public function up(): void
+{
+    Schema::create('ingatlanok', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('kategoria')->constrained('kategoriak');
+        $table->text('leiras');
+        $table->date('hirdetesDatuma')->default(DB::raw('CURRENT_DATE'));
+        $table->boolean('tehermentes');
+        $table->integer('ar');
+        $table->string('kepUrl');
+    });
+}
+
+$table->date('hirdetesDatuma')->default(DB::raw('CURRENT_DATE'));
+
+6. Kategoria model
+
+app/Models/Kategoria.php
+
+class Kategoria extends Model
+{
+    public $timestamps = false;
+
+    protected $table = 'kategoriak';
+
+    protected $fillable = [
+        'nev'
+    ];
+}
+
+7. Ingatlan model
+
+app/Models/Ingatlan.php
+
+class Ingatlan extends Model
+{
+    public $timestamps = false;
+
+    protected $table = 'ingatlanok';
+
+    protected $fillable = [
+        'kategoria',
+        'leiras',
+        'hirdetesDatuma',
+        'tehermentes',
+        'ar',
+        'kepUrl'
+    ];
+
+    public function kategoriaAdat()
+    {
+        return $this->belongsTo(Kategoria::class, 'kategoria');
+    }
+}
+
+return $this->belongsTo(Kategoria::class, 'kategoria');
+
+
+8. Kategóriák feltöltése Seederrel
+
+database/seeders/KategoriaSeeder.php
+
+public function run(): void
+{
+    DB::table('kategoriak')->insert([
+        ['id' => 1, 'nev' => 'Ház'],
+        ['id' => 2, 'nev' => 'Lakás'],
+        ['id' => 3, 'nev' => 'Építési telek'],
+        ['id' => 4, 'nev' => 'Garázs'],
+        ['id' => 5, 'nev' => 'Mezőgazdasági terület'],
+        ['id' => 6, 'nev' => 'Ipari ingatlan'],
+    ]);
+}
+
+public function run(): void
+{
+    $this->call(KategoriaSeeder::class);
+}
+
+php artisan migrate:fresh --seed
+
+
+9. Route-ok létrehozása
+
+Csak a kért végpontokat szabad létrehozni!
+
+routes/api.php
+
+use App\Http\Controllers\IngatlanController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/ingatlan', [IngatlanController::class, 'index']);
+Route::post('/ingatlan', [IngatlanController::class, 'store']);
+
+Ezek lesznek:
+
+GET  /api/ingatlan
+POST /api/ingatlan
+
+Ellenőrzés:
+
+php artisan route:list
+
+
+
+10. Controller – összes ingatlan lekérdezése
+
+app/Http/Controllers/IngatlanController.php
+
+namespace App\Http\Controllers;
+
+use App\Models\Ingatlan;
+use Illuminate\Http\Request;
+
+class IngatlanController extends Controller
+{
+    public function index()
+    {
+        $ingatlanok = Ingatlan::with('kategoriaAdat')->get();
+
+        $valasz = $ingatlanok->map(function ($ingatlan) {
+            return [
+                'id' => $ingatlan->id,
+                'kategoria' => $ingatlan->kategoriaAdat->nev,
+                'leiras' => $ingatlan->leiras,
+                'hirdetesDatuma' => $ingatlan->hirdetesDatuma,
+                'tehermentes' => (bool)$ingatlan->tehermentes,
+                'ar' => $ingatlan->ar,
+                'kepUrl' => $ingatlan->kepUrl,
+            ];
+        });
+
+        return response()->json($valasz, 200);
+    }
+}
+
+Ez teljesíti:
+
+GET /api/ingatlan
+
+A válaszban szerepel:
+
+{
+  "id": 1,
+  "kategoria": "Lakás",
+  "leiras": "Eladó ...",
+  "hirdetesDatuma": "2022-03-10",
+  "tehermentes": true,
+  "ar": 26990000,
+  "kepUrl": "https://pictures.com/apartman.jpg"
+}
+
+
+11. Controller – új ingatlan rögzítése
+
+Ugyanebbe a controllerbe:
+
+public function store(Request $request)
+{
+    if (
+        !$request->has('kategoria') ||
+        !$request->has('leiras') ||
+        !$request->has('tehermentes') ||
+        !$request->has('ar') ||
+        !$request->has('kepUrl')
+    ) {
+        return response('Hiányos adatok', 400);
+    }
+
+    $ingatlan = Ingatlan::create([
+        'kategoria' => $request->kategoria,
+        'leiras' => $request->leiras,
+        'hirdetesDatuma' => $request->hirdetesDatuma ?? now()->toDateString(),
+        'tehermentes' => $request->tehermentes,
+        'ar' => $request->ar,
+        'kepUrl' => $request->kepUrl,
+    ]);
+
+    return response()->json([
+        'Id' => $ingatlan->id
+    ], 201);
+}
+
+Fontos: a hirdetesDatuma nem kötelező, mert ha nincs megadva, akkor aktuális dátum kell.
+
+12. Teljes controller egyben
+namespace App\Http\Controllers;
+
+use App\Models\Ingatlan;
+use Illuminate\Http\Request;
+
+class IngatlanController extends Controller
+{
+    public function index()
+    {
+        $ingatlanok = Ingatlan::with('kategoriaAdat')->get();
+
+        $valasz = $ingatlanok->map(function ($ingatlan) {
+            return [
+                'id' => $ingatlan->id,
+                'kategoria' => $ingatlan->kategoriaAdat->nev,
+                'leiras' => $ingatlan->leiras,
+                'hirdetesDatuma' => $ingatlan->hirdetesDatuma,
+                'tehermentes' => (bool)$ingatlan->tehermentes,
+                'ar' => $ingatlan->ar,
+                'kepUrl' => $ingatlan->kepUrl,
+            ];
+        });
+
+        return response()->json($valasz, 200);
+    }
+
+    public function store(Request $request)
+    {
+        if (
+            !$request->has('kategoria') ||
+            !$request->has('leiras') ||
+            !$request->has('tehermentes') ||
+            !$request->has('ar') ||
+            !$request->has('kepUrl')
+        ) {
+            return response('Hiányos adatok', 400);
+        }
+
+        $ingatlan = Ingatlan::create([
+            'kategoria' => $request->kategoria,
+            'leiras' => $request->leiras,
+            'hirdetesDatuma' => $request->hirdetesDatuma ?? now()->toDateString(),
+            'tehermentes' => $request->tehermentes,
+            'ar' => $request->ar,
+            'kepUrl' => $request->kepUrl,
+        ]);
+
+        return response()->json([
+            'Id' => $ingatlan->id
+        ], 201);
+    }
+}
+13. Tesztelés Postmanben vagy Thunder Clientben
+GET kérés
+GET http://localhost:8000/api/ingatlan
+
+Várt státuszkód:
+
+200 OK
+POST kérés
+POST http://localhost:8000/api/ingatlan
+
+Body:
+
+{
+  "kategoria": 2,
+  "leiras": "Eladó lakás jó állapotban.",
+  "hirdetesDatuma": "2022-03-19",
+  "tehermentes": true,
+  "ar": 45000000,
+  "kepUrl": "https://pictures.com/apartman.jpg"
+}
+
+Várt válasz:
+
+{
+  "Id": 1
+}
+
+Várt státuszkód:
+
+201 CREATED
+Hibás POST kérés
+
+Például hiányzik az ár:
+
+{
+  "kategoria": 2,
+  "leiras": "Eladó lakás.",
+  "tehermentes": true,
+  "kepUrl": "https://pictures.com/apartman.jpg"
+}
+
+Várt válasz:
+
+Hiányos adatok
+
+Várt státuszkód:
+
+400 BAD REQUEST
+14. Fontos vizsgás ellenőrzőlista
+
+Ezt külön írd fel:
+
+[ ] Projekt neve megfelelő
+[ ] Adatbázis neve: ingatlan
+[ ] kategoriak tábla kész
+[ ] ingatlanok tábla kész
+[ ] hirdetesDatuma alapértelmezett értéke aktuális dátum
+[ ] kategoriak tábla fel van töltve
+[ ] GET /api/ingatlan működik
+[ ] GET válaszban szerepel a kategória neve
+[ ] POST /api/ingatlan működik
+[ ] Sikeres POST válasz: 201 CREATED
+[ ] Sikeres POST válaszban: { "Id": új_id }
+[ ] Hiányos adat esetén: 400 BAD REQUEST
+[ ] Hiányos adat válasz: Hiányos adatok
+[ ] Nincs felesleges végpont
+[ ] Nincs felesleges controller metódus
+15. Gyakori hibák
+Ha nincs /api/ingatlan
+
+Ellenőrizd:
+
+php artisan route:list
+Ha nem frissülnek a route-ok
+php artisan optimize:clear
+Ha Class not found hiba van
+composer dump-autoload
+Ha tömeges mentésnél hiba van
+
+Ellenőrizd a modelben:
+
+protected $fillable = [
+    'kategoria',
+    'leiras',
+    'hirdetesDatuma',
+    'tehermentes',
+    'ar',
+    'kepUrl'
+];
+Ha a kategória neve nem jelenik meg
+
+Ellenőrizd a kapcsolatot:
+
+public function kategoriaAdat()
+{
+    return $this->belongsTo(Kategoria::class, 'kategoria');
+}
+
+És a lekérdezést:
+
+Ingatlan::with('kategoriaAdat')->get();
+Rövid sorrend, amit vizsgán kövess
+1. Laravel projekt létrehozása
+2. .env adatbázis beállítása
+3. Modellek + migrationök létrehozása
+4. Táblák mezőinek megírása
+5. Seeder elkészítése
+6. migrate:fresh --seed futtatása
+7. Route-ok megírása
+8. Controller index() elkészítése
+9. Controller store() elkészítése
+10. Tesztelés GET-tel
+11. Tesztelés POST-tal
+12. Hibás POST tesztelése
+
+Ez a jegyzet már elég egy vizsgás Laravel backend megoldáshoz.

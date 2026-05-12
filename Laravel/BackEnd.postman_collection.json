@@ -1,0 +1,98 @@
+{
+  "info": {
+    "_postman_id": "11dd6d6a-261b-4376-9e80-21e2699382a9",
+    "name": "BackEnd",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52369734",
+    "_collection_link": "https://go.postman.co/collection/52369734-11dd6d6a-261b-4376-9e80-21e2699382a9?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ingatlan",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "ingatlan"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n\"_id\": 99,\r\n\"kategoria\": 2,\r\n\"leiras\": \"Eladó ...\",\r\n\"hirdetesDatuma\": \"2022-03-19\",\r\n\"tehermentes\": true,\r\n\"ar\": 45000000,\r\n\"kepUrl\": \"https://pictures.com/apartman.jpg\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ingatlan",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "ingatlan"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/api/ingatlan/7",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "ingatlan",
+            "7"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
