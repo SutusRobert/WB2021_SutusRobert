@@ -1,0 +1,18 @@
+Backend
+composer create-project laravel/laravel Sutus_Robert_backend
+cd Sutus_Robert_backend
+code .
+
+vs megnyílik átirom a .env filet mysql - mysql
+
+létrehozod a táblát átnevezed AZZAL kezdönk amiben nincs foreinkey
+Nagybetűvel nevezed el meg nem többes számba, majd átírod a file nevét arra ami a feladatban van 
+berakod a az adatokat
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+fontos mert nem fut le
+
+php artisan make:model -mc --api Ingatlan
+php artisan install:api
+
+php artisan migrate --seed

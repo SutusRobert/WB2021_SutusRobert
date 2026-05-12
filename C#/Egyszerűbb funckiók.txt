@@ -1,0 +1,94 @@
+Egyszerűbb funckiók
+using System;
+
+namespace MatekFuggvenyek
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Matematikai függvények C#-ban");
+
+            Console.WriteLine("Összeadás: " + Osszead(5, 3));
+            Console.WriteLine("Kivonás: " + Kivon(10, 4));
+            Console.WriteLine("Szorzás: " + Szoroz(6, 7));
+            Console.WriteLine("Osztás: " + Oszt(20, 5));
+
+            Console.WriteLine("Négyzet: " + Negyzet(8));
+            Console.WriteLine("Hatvány: " + Hatvany(2, 5));
+            Console.WriteLine("Négyzetgyök: " + Negyzetgyok(64));
+
+            Console.WriteLine("Másodfokú egyenlet megoldása:");
+            MasodfokuEgyenlet(1, -5, 6);
+
+            Console.ReadKey();
+        }
+
+        static double Osszead(double a, double b)
+        {
+            return a + b;
+        }
+
+        static double Kivon(double a, double b)
+        {
+            return a - b;
+        }
+
+        static double Szoroz(double a, double b)
+        {
+            return a * b;
+        }
+
+        static double Oszt(double a, double b)
+        {
+            if (b == 0)
+            {
+                Console.WriteLine("Nullával nem lehet osztani!");
+                return 0;
+            }
+
+            return a / b;
+        }
+
+        static double Negyzet(double x)
+        {
+            return x * x;
+        }
+
+        static double Hatvany(double alap, double kitevo)
+        {
+            return Math.Pow(alap, kitevo);
+        }
+
+        static double Negyzetgyok(double x)
+        {
+            return Math.Sqrt(x);
+        }
+
+        static void MasodfokuEgyenlet(double a, double b, double c)
+        {
+            double diszkriminans = b * b - 4 * a * c;
+
+            if (diszkriminans > 0)
+            {
+                double x1 = (-b + Math.Sqrt(diszkriminans)) / (2 * a);
+                double x2 = (-b - Math.Sqrt(diszkriminans)) / (2 * a);
+
+                Console.WriteLine("Két megoldás van:");
+                Console.WriteLine("x1 = " + x1);
+                Console.WriteLine("x2 = " + x2);
+            }
+            else if (diszkriminans == 0)
+            {
+                double x = -b / (2 * a);
+
+                Console.WriteLine("Egy megoldás van:");
+                Console.WriteLine("x = " + x);
+            }
+            else
+            {
+                Console.WriteLine("Nincs valós megoldás.");
+            }
+        }
+    }
+}

@@ -1,0 +1,7 @@
+W:\Progi\ingatlan\bin\Debug\ingatlan.exe.config
+W:\Progi\ingatlan\bin\Debug\ingatlan.exe
+W:\Progi\ingatlan\bin\Debug\ingatlan.pdb
+W:\Progi\ingatlan\obj\Debug\ingatlan.csproj.AssemblyReference.cache
+W:\Progi\ingatlan\obj\Debug\ingatlan.csproj.CoreCompileInputs.cache
+W:\Progi\ingatlan\obj\Debug\ingatlan.exe
+W:\Progi\ingatlan\obj\Debug\ingatlan.pdb

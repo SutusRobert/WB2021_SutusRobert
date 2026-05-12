@@ -1,0 +1,201 @@
+Matematikai funkciók
+
+
+using System;
+
+namespace BonyolultabbMatek
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Lineáris egyenlet:");
+            LinearisEgyenlet(2, -8);
+
+            Console.WriteLine("\nMásodfokú egyenlet:");
+            MasodfokuEgyenlet(1, -5, 6);
+
+            Console.WriteLine("\nPitagorasz:");
+            Console.WriteLine(PitagoraszAtfogo(3, 4));
+
+            Console.WriteLine("\nKamatos kamat:");
+            Console.WriteLine(KamatosKamat(100000, 0.05, 3));
+
+            Console.WriteLine("\nFaktoriális:");
+            Console.WriteLine(Faktorialis(5));
+
+            Console.WriteLine("\nPrímszám-e:");
+            Console.WriteLine(PrimE(17));
+
+            Console.WriteLine("\nÁtlag:");
+            double[] szamok = { 2, 4, 6, 8, 10 };
+            Console.WriteLine(Atlag(szamok));
+
+            Console.WriteLine("\nSzórás:");
+            Console.WriteLine(Szoras(szamok));
+
+            Console.WriteLine("\nTrigonometria:");
+            Console.WriteLine("sin(30) = " + SinFokban(30));
+            Console.WriteLine("cos(60) = " + CosFokban(60));
+
+            Console.ReadKey();
+        }
+
+        // 1. Lineáris egyenlet: ax + b = 0
+        static void LinearisEgyenlet(double a, double b)
+        {
+            if (a == 0)
+            {
+                Console.WriteLine("Nem lineáris egyenlet.");
+                return;
+            }
+
+            double x = -b / a;
+            Console.WriteLine("x = " + x);
+        }
+
+        // 2. Másodfokú egyenlet: ax² + bx + c = 0
+        static void MasodfokuEgyenlet(double a, double b, double c)
+        {
+            if (a == 0)
+            {
+                LinearisEgyenlet(b, c);
+                return;
+            }
+
+            double d = Diszkriminans(a, b, c);
+
+            if (d > 0)
+            {
+                double x1 = (-b + Math.Sqrt(d)) / (2 * a);
+                double x2 = (-b - Math.Sqrt(d)) / (2 * a);
+
+                Console.WriteLine("x1 = " + x1);
+                Console.WriteLine("x2 = " + x2);
+            }
+            else if (d == 0)
+            {
+                double x = -b / (2 * a);
+                Console.WriteLine("x = " + x);
+            }
+            else
+            {
+                Console.WriteLine("Nincs valós megoldás.");
+            }
+        }
+
+        static double Diszkriminans(double a, double b, double c)
+        {
+            return b * b - 4 * a * c;
+        }
+
+        // 3. Pitagorasz-tétel: c = √(a² + b²)
+        static double PitagoraszAtfogo(double a, double b)
+        {
+            return Math.Sqrt(a * a + b * b);
+        }
+
+        // 4. Kamatos kamat: végösszeg = tőke * (1 + kamat)^évek
+        static double KamatosKamat(double toke, double kamat, int ev)
+        {
+            return toke * Math.Pow(1 + kamat, ev);
+        }
+
+        // 5. Faktoriális: n! = 1 * 2 * 3 * ... * n
+        static long Faktorialis(int n)
+        {
+            if (n < 0)
+            {
+                Console.WriteLine("Negatív számnak nincs faktoriálisa.");
+                return -1;
+            }
+
+            long eredmeny = 1;
+
+            for (int i = 2; i <= n; i++)
+            {
+                eredmeny *= i;
+            }
+
+            return eredmeny;
+        }
+
+        // 6. Prímszámvizsgálat
+        static bool PrimE(int szam)
+        {
+            if (szam < 2)
+                return false;
+
+            for (int i = 2; i <= Math.Sqrt(szam); i++)
+            {
+                if (szam % i == 0)
+                    return false;
+            }
+
+            return true;
+        }
+
+        // 7. Átlag
+        static double Atlag(double[] tomb)
+        {
+            double osszeg = 0;
+
+            for (int i = 0; i < tomb.Length; i++)
+            {
+                osszeg += tomb[i];
+            }
+
+            return osszeg / tomb.Length;
+        }
+
+        // 8. Szórás
+        static double Szoras(double[] tomb)
+        {
+            double atlag = Atlag(tomb);
+            double osszeg = 0;
+
+            for (int i = 0; i < tomb.Length; i++)
+            {
+                osszeg += Math.Pow(tomb[i] - atlag, 2);
+            }
+
+            return Math.Sqrt(osszeg / tomb.Length);
+        }
+
+        // 9. Fok átváltása radiánba
+        static double FokRadianna(double fok)
+        {
+            return fok * Math.PI / 180;
+        }
+
+        // 10. Szinusz fokban
+        static double SinFokban(double fok)
+        {
+            return Math.Sin(FokRadianna(fok));
+        }
+
+        // 11. Koszinusz fokban
+        static double CosFokban(double fok)
+        {
+            return Math.Cos(FokRadianna(fok));
+        }
+
+        // 12. Logaritmus
+        static double Logaritmus(double szam, double alap)
+        {
+            return Math.Log(szam, alap);
+        }
+
+        // 13. Természetes logaritmus
+        static double TermeszetesLog(double szam)
+        {
+            return Math.Log(szam);
+        }
+
+        // 14. Abszolútérték
+        static double AbszolutErtek(double szam)
+        {
+            return Math.Abs(szam);
+        }
+    }
+}

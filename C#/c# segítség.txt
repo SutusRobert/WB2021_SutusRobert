@@ -1,0 +1,494 @@
+1. Projekt létrehozása
+
+Visual Studio-ban:
+
+Create new project
+Console App (.NET Framework)
+Project name: RealEstate
+
+A bemeneti fájl legyen a projekt mappájában:
+
+realestates.csv
+
+A fájlnál állítsd be:
+
+Copy to Output Directory: Copy if newer
+2. Szükséges osztályok
+
+Három saját osztály kell:
+
+Ad
+Seller
+Category
+
+Az adatok:
+
+Ad       -> hirdetés adatai
+Seller   -> eladó adatai
+Category -> kategória adatai
+3. Category osztály
+
+Category.cs
+
+class Category
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+
+    public Category(int id, string name)
+    {
+        Id = id;
+        Name = name;
+    }
+}
+4. Seller osztály
+
+Seller.cs
+
+class Seller
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Phone { get; set; }
+
+    public Seller(int id, string name, string phone)
+    {
+        Id = id;
+        Name = name;
+        Phone = phone;
+    }
+}
+5. Ad osztály
+
+Ad.cs
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+
+class Ad
+{
+    public int Id { get; set; }
+    public string Description { get; set; }
+    public int Rooms { get; set; }
+    public int Area { get; set; }
+    public int Floors { get; set; }
+    public Category Category { get; set; }
+    public Seller Seller { get; set; }
+    public bool FreeOfCharge { get; set; }
+    public string ImageUrl { get; set; }
+    public double Lat { get; set; }
+    public double Long { get; set; }
+    public DateTime CreateAt { get; set; }
+
+    public Ad(string sor)
+    {
+        string[] adatok = sor.Split(';');
+
+        Id = int.Parse(adatok[0]);
+        Description = adatok[1];
+        Rooms = int.Parse(adatok[2]);
+        Area = int.Parse(adatok[3]);
+        Floors = int.Parse(adatok[4]);
+
+        Category = new Category(
+            int.Parse(adatok[5]),
+            adatok[6]
+        );
+
+        Seller = new Seller(
+            int.Parse(adatok[7]),
+            adatok[8],
+            adatok[9]
+        );
+
+        FreeOfCharge = bool.Parse(adatok[10]);
+        ImageUrl = adatok[11];
+
+        string[] koordinatak = adatok[12].Split(',');
+        Lat = double.Parse(koordinatak[0], CultureInfo.InvariantCulture);
+        Long = double.Parse(koordinatak[1], CultureInfo.InvariantCulture);
+
+        CreateAt = DateTime.Parse(adatok[13]);
+    }
+
+    public static List<Ad> LoadFromCsv(string fajlnev)
+    {
+        return File.ReadAllLines(fajlnev)
+            .Skip(1)
+            .Select(sor => new Ad(sor))
+            .ToList();
+    }
+
+    public double DistanceTo(double lat, double lon)
+    {
+        double x = Lat - lat;
+        double y = Long - lon;
+
+        return Math.Sqrt(x * x + y * y);
+    }
+}
+6. Fontos using-ok
+
+Program.cs tetejére:
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+Az Ad.cs tetejére:
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+7. CSV beolvasás
+
+A feladat kéri, hogy legyen statikus metódus:
+
+public static List<Ad> LoadFromCsv(string fajlnev)
+
+Használata:
+
+List<Ad> hirdetesek = Ad.LoadFromCsv("realestates.csv");
+
+Ez:
+
+beolvassa a fájlt
+kihagyja az első sort
+minden sorból Ad objektumot készít
+listát ad vissza
+8. Program.cs alap szerkezete
+
+Program.cs
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace RealEstate
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            List<Ad> hirdetesek = Ad.LoadFromCsv("realestates.csv");
+
+            Console.WriteLine("6. feladat:");
+            double atlag = hirdetesek
+                .Where(x => x.Floors == 0)
+                .Average(x => x.Area);
+
+            Console.WriteLine($"Földszinti ingatlanok átlagos alapterülete: {atlag:F2} m2");
+
+            Console.WriteLine();
+
+            Console.WriteLine("8. feladat:");
+            double mesevarLat = 47.4164220114023;
+            double mesevarLong = 19.066342425796986;
+
+            Ad legkozelebbi = hirdetesek
+                .Where(x => x.FreeOfCharge)
+                .OrderBy(x => x.DistanceTo(mesevarLat, mesevarLong))
+                .First();
+
+            Console.WriteLine("Mesevár óvodához légvonalban legközelebbi tehermentes ingatlan adatai:");
+            Console.WriteLine($"\tEladó neve     : {legkozelebbi.Seller.Name}");
+            Console.WriteLine($"\tEladó telefonja: {legkozelebbi.Seller.Phone}");
+            Console.WriteLine($"\tAlapterület    : {legkozelebbi.Area} m2");
+            Console.WriteLine($"\tSzobák száma   : {legkozelebbi.Rooms}");
+
+            Console.ReadKey();
+        }
+    }
+}
+9. 6. feladat magyarázata
+
+Feladat:
+
+Földszinti ingatlanok átlagos alapterülete
+
+A földszint:
+
+x.Floors == 0
+
+Átlag:
+
+.Average(x => x.Area)
+
+Két tizedesjegy:
+
+{atlag:F2}
+
+Teljes rész:
+
+double atlag = hirdetesek
+    .Where(x => x.Floors == 0)
+    .Average(x => x.Area);
+
+Console.WriteLine($"Földszinti ingatlanok átlagos alapterülete: {atlag:F2} m2");
+10. 7. feladat – DistanceTo metódus
+
+Az Ad osztályba kell írni:
+
+public double DistanceTo(double lat, double lon)
+{
+    double x = Lat - lat;
+    double y = Long - lon;
+
+    return Math.Sqrt(x * x + y * y);
+}
+
+Ez Pitagorasz-tétellel számol távolságot:
+
+távolság = √((lat1 - lat2)² + (long1 - long2)²)
+11. 8. feladat magyarázata
+
+Mesevár óvoda koordinátái:
+
+double mesevarLat = 47.4164220114023;
+double mesevarLong = 19.066342425796986;
+
+Csak tehermentes ingatlan kell:
+
+.Where(x => x.FreeOfCharge)
+
+Legközelebbi keresése:
+
+.OrderBy(x => x.DistanceTo(mesevarLat, mesevarLong))
+.First();
+
+Teljes rész:
+
+Ad legkozelebbi = hirdetesek
+    .Where(x => x.FreeOfCharge)
+    .OrderBy(x => x.DistanceTo(mesevarLat, mesevarLong))
+    .First();
+12. Teljes Ad.cs egyben
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+
+namespace RealEstate
+{
+    class Ad
+    {
+        public int Id { get; set; }
+        public string Description { get; set; }
+        public int Rooms { get; set; }
+        public int Area { get; set; }
+        public int Floors { get; set; }
+        public Category Category { get; set; }
+        public Seller Seller { get; set; }
+        public bool FreeOfCharge { get; set; }
+        public string ImageUrl { get; set; }
+        public double Lat { get; set; }
+        public double Long { get; set; }
+        public DateTime CreateAt { get; set; }
+
+        public Ad(string sor)
+        {
+            string[] adatok = sor.Split(';');
+
+            Id = int.Parse(adatok[0]);
+            Description = adatok[1];
+            Rooms = int.Parse(adatok[2]);
+            Area = int.Parse(adatok[3]);
+            Floors = int.Parse(adatok[4]);
+
+            Category = new Category(
+                int.Parse(adatok[5]),
+                adatok[6]
+            );
+
+            Seller = new Seller(
+                int.Parse(adatok[7]),
+                adatok[8],
+                adatok[9]
+            );
+
+            FreeOfCharge = bool.Parse(adatok[10]);
+            ImageUrl = adatok[11];
+
+            string[] koordinatak = adatok[12].Split(',');
+            Lat = double.Parse(koordinatak[0], CultureInfo.InvariantCulture);
+            Long = double.Parse(koordinatak[1], CultureInfo.InvariantCulture);
+
+            CreateAt = DateTime.Parse(adatok[13]);
+        }
+
+        public static List<Ad> LoadFromCsv(string fajlnev)
+        {
+            return File.ReadAllLines(fajlnev)
+                .Skip(1)
+                .Select(sor => new Ad(sor))
+                .ToList();
+        }
+
+        public double DistanceTo(double lat, double lon)
+        {
+            double x = Lat - lat;
+            double y = Long - lon;
+
+            return Math.Sqrt(x * x + y * y);
+        }
+    }
+}
+13. Teljes Category.cs
+namespace RealEstate
+{
+    class Category
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+
+        public Category(int id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
+    }
+}
+14. Teljes Seller.cs
+namespace RealEstate
+{
+    class Seller
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Phone { get; set; }
+
+        public Seller(int id, string name, string phone)
+        {
+            Id = id;
+            Name = name;
+            Phone = phone;
+        }
+    }
+}
+15. Teljes Program.cs
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace RealEstate
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            List<Ad> hirdetesek = Ad.LoadFromCsv("realestates.csv");
+
+            Console.WriteLine("6. feladat:");
+            double atlag = hirdetesek
+                .Where(x => x.Floors == 0)
+                .Average(x => x.Area);
+
+            Console.WriteLine($"Földszinti ingatlanok átlagos alapterülete: {atlag:F2} m2");
+
+            Console.WriteLine();
+
+            Console.WriteLine("8. feladat:");
+            double mesevarLat = 47.4164220114023;
+            double mesevarLong = 19.066342425796986;
+
+            Ad legkozelebbi = hirdetesek
+                .Where(x => x.FreeOfCharge)
+                .OrderBy(x => x.DistanceTo(mesevarLat, mesevarLong))
+                .First();
+
+            Console.WriteLine("Mesevár óvodához légvonalban legközelebbi tehermentes ingatlan adatai:");
+            Console.WriteLine($"\tEladó neve     : {legkozelebbi.Seller.Name}");
+            Console.WriteLine($"\tEladó telefonja: {legkozelebbi.Seller.Phone}");
+            Console.WriteLine($"\tAlapterület    : {legkozelebbi.Area} m2");
+            Console.WriteLine($"\tSzobák száma   : {legkozelebbi.Rooms}");
+
+            Console.ReadKey();
+        }
+    }
+}
+16. Fontos vizsgás ellenőrzőlista
+[ ] Projekt neve: RealEstate
+[ ] realestates.csv a projektben van
+[ ] Copy to Output Directory beállítva
+[ ] Van Ad osztály
+[ ] Van Seller osztály
+[ ] Van Category osztály
+[ ] Ad osztályban van LoadFromCsv metódus
+[ ] LoadFromCsv visszatérési értéke List<Ad>
+[ ] Beolvasás kihagyja a fejlécsort
+[ ] Category objektum létrejön
+[ ] Seller objektum létrejön
+[ ] Lat és Long külön változóba kerül
+[ ] DistanceTo metódus elkészült
+[ ] 6. feladat kiírva
+[ ] Földszinti átlag két tizedesjeggyel kiírva
+[ ] 8. feladat kiírva
+[ ] Csak tehermentes ingatlanokból keres
+[ ] Legközelebbit DistanceTo alapján keresi
+17. Gyakori hibák
+Nem találja a CSV fájlt
+
+Megoldás:
+
+realestates.csv -> Properties
+Copy to Output Directory -> Copy if newer
+Hibás double parse
+
+Ha a koordináta ponttal van írva:
+
+47.4164220114023
+
+Akkor kell:
+
+CultureInfo.InvariantCulture
+
+Példa:
+
+double.Parse(koordinatak[0], CultureInfo.InvariantCulture)
+A fejlécsort is beolvassa
+
+Ez hibát okozhat:
+
+File.ReadAllLines(fajlnev)
+
+Ez a jó:
+
+File.ReadAllLines(fajlnev).Skip(1)
+Rossz logikai érték
+
+Ha a CSV-ben ez van:
+
+true
+false
+
+Akkor jó:
+
+bool.Parse(adatok[10])
+
+Ha ez van:
+
+1
+0
+
+Akkor ezt kell használni:
+
+FreeOfCharge = adatok[10] == "1";
+18. Rövid vizsgás sorrend
+1. RealEstate konzolos projekt létrehozása
+2. realestates.csv bemásolása
+3. Category osztály létrehozása
+4. Seller osztály létrehozása
+5. Ad osztály létrehozása
+6. Konstruktor megírása
+7. LoadFromCsv metódus megírása
+8. Adatok beolvasása Program.cs-ben
+9. 6. feladat: földszinti átlag
+10. DistanceTo metódus elkészítése
+11. 8. feladat: legközelebbi tehermentes ingatlan
+12. Kiírás formázása
