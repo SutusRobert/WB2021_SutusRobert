@@ -1,0 +1,392 @@
+C# .NET Framework GUI jegyzet – RealEstateGUI
+1. Adatbázis létrehozása
+
+MySQL-ben hozz létre adatbázist:
+
+CREATE DATABASE ingatlan
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_hungarian_ci;
+
+Ezután futtasd le az ingatlan.sql fájlt az ingatlan adatbázisban.
+
+2. Projekt létrehozása
+
+Visual Studio-ban:
+
+Create new project
+Windows Forms App (.NET Framework)
+Project name: RealEstateGUI
+3. MySQL csomag telepítése
+
+NuGet Package Managerben telepítsd:
+
+MySql.Data
+
+Vagy Package Manager Console:
+
+Install-Package MySql.Data
+4. Form kinézet
+
+A Formra ezek kellenek:
+
+ListBox              -> bal oldalra
+Label                -> "Eladó neve:"
+Label                -> kiválasztott név
+Label                -> "Eladó telefonszáma:"
+Label                -> kiválasztott telefonszám
+Button               -> "Hirdetések betöltése"
+Label                -> "Hirdetések száma:"
+Label                -> darabszám
+
+Ajánlott nevek:
+
+listBoxSellers
+labelSellerName
+labelSellerPhone
+buttonLoadAds
+labelAdCount
+5. Reszponzív viselkedés
+
+A vezérlőknél állítsd be az Anchor tulajdonságot.
+
+Példa:
+
+listBoxSellers      -> Top, Bottom, Left
+labelSellerName     -> Top, Left, Right
+labelSellerPhone    -> Top, Left, Right
+buttonLoadAds       -> Top, Left
+labelAdCount        -> Top, Left
+
+A Form tulajdonságai:
+
+Text: RealEstateGUI
+MinimumSize: 600; 350
+StartPosition: CenterScreen
+6. Seller osztály
+
+Ha nem hivatkozod be a konzolos projektből, akkor készítsd el újra.
+
+Seller.cs
+
+namespace RealEstateGUI
+{
+    class Seller
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Phone { get; set; }
+
+        public Seller(int id, string name, string phone)
+        {
+            Id = id;
+            Name = name;
+            Phone = phone;
+        }
+
+        public override string ToString()
+        {
+            return Name;
+        }
+    }
+}
+
+Fontos:
+
+public override string ToString()
+{
+    return Name;
+}
+
+Ez kell ahhoz, hogy a ListBoxban csak az eladó neve jelenjen meg.
+
+7. Adatbázis kapcsolat
+
+A Form tetejére:
+
+using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
+
+Kapcsolati szöveg:
+
+string connectionString =
+    "server=localhost;database=ingatlan;uid=root;pwd=;charset=utf8;";
+
+Ha van jelszavad:
+
+string connectionString =
+    "server=localhost;database=ingatlan;uid=root;pwd=jelszo;charset=utf8;";
+8. Teljes Form1.cs példa
+using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
+
+namespace RealEstateGUI
+{
+    public partial class Form1 : Form
+    {
+        string connectionString =
+            "server=localhost;database=ingatlan;uid=root;pwd=;charset=utf8;";
+
+        List<Seller> sellers = new List<Seller>();
+
+        public Form1()
+        {
+            InitializeComponent();
+            SellersBetoltese();
+
+            listBoxSellers.DataSource = sellers;
+            listBoxSellers.DisplayMember = "Name";
+
+            labelSellerName.DataBindings.Add(
+                "Text",
+                listBoxSellers.DataSource,
+                "Name"
+            );
+
+            labelSellerPhone.DataBindings.Add(
+                "Text",
+                listBoxSellers.DataSource,
+                "Phone"
+            );
+        }
+
+        private void SellersBetoltese()
+        {
+            sellers.Clear();
+
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                connection.Open();
+
+                string sql = "SELECT id, name, phone FROM sellers";
+
+                using (MySqlCommand command = new MySqlCommand(sql, connection))
+                {
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Seller seller = new Seller(
+                                reader.GetInt32("id"),
+                                reader.GetString("name"),
+                                reader.GetString("phone")
+                            );
+
+                            sellers.Add(seller);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void buttonLoadAds_Click(object sender, EventArgs e)
+        {
+            if (listBoxSellers.SelectedItem == null)
+            {
+                MessageBox.Show("Válasszon ki egy eladót!");
+                return;
+            }
+
+            Seller selectedSeller = (Seller)listBoxSellers.SelectedItem;
+
+            int count = HirdetesekSzama(selectedSeller.Id);
+
+            labelAdCount.Text = count.ToString();
+        }
+
+        private int HirdetesekSzama(int sellerId)
+        {
+            int count = 0;
+
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                connection.Open();
+
+                string sql = "SELECT COUNT(*) FROM realestates WHERE sellerId = @sellerId";
+
+                using (MySqlCommand command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@sellerId", sellerId);
+
+                    count = Convert.ToInt32(command.ExecuteScalar());
+                }
+            }
+
+            return count;
+        }
+    }
+}
+9. Button esemény bekötése
+
+A Designerben kattints duplán a gombra:
+
+Hirdetések betöltése
+
+Így létrejön:
+
+private void buttonLoadAds_Click(object sender, EventArgs e)
+{
+}
+
+Ide kerül a hirdetések számolása.
+
+10. Fontos SQL lekérdezések
+Sellers betöltése
+SELECT id, name, phone FROM sellers;
+Egy eladó hirdetéseinek száma
+SELECT COUNT(*) 
+FROM realestates 
+WHERE sellerId = @sellerId;
+
+Ha nálad más az oszlop neve, például seller_id, akkor így:
+
+SELECT COUNT(*) 
+FROM realestates 
+WHERE seller_id = @sellerId;
+11. Adatkötés magyarázat
+
+A feladat kéri:
+
+Eladó neve címke mellett a kijelölt elem neve jelenjen meg adatkötéssel.
+
+Ez:
+
+labelSellerName.DataBindings.Add(
+    "Text",
+    listBoxSellers.DataSource,
+    "Name"
+);
+
+Telefonszám:
+
+labelSellerPhone.DataBindings.Add(
+    "Text",
+    listBoxSellers.DataSource,
+    "Phone"
+);
+12. ListBox fontos beállítás
+listBoxSellers.DataSource = sellers;
+listBoxSellers.DisplayMember = "Name";
+
+Ezért csak a nevek látszanak a listában.
+
+13. Ha nem működik az adatkötés
+
+Használhatsz eseményes megoldást is, de a feladat adatkötést kér.
+
+Biztonsági megoldásnak jó:
+
+private void listBoxSellers_SelectedIndexChanged(object sender, EventArgs e)
+{
+    if (listBoxSellers.SelectedItem != null)
+    {
+        Seller seller = (Seller)listBoxSellers.SelectedItem;
+
+        labelSellerName.Text = seller.Name;
+        labelSellerPhone.Text = seller.Phone;
+    }
+}
+
+De vizsgán inkább az adatkötéses megoldást írd.
+
+14. Lehetséges hiba: rossz táblanév
+
+A feladat szerint:
+
+sellers tábla
+
+A hirdetések táblája gyakran:
+
+realestates
+
+Ha hibát kapsz, nézd meg az adatbázisban a pontos neveket:
+
+SHOW TABLES;
+DESCRIBE sellers;
+DESCRIBE realestates;
+15. GUI vizsgás ellenőrzőlista
+[ ] Adatbázis neve: ingatlan
+[ ] UTF-8 kódolás
+[ ] Magyar egybevetés
+[ ] ingatlan.sql lefuttatva
+[ ] Projekt neve: RealEstateGUI
+[ ] Windows Forms App (.NET Framework)
+[ ] MySql.Data telepítve
+[ ] Van ListBox bal oldalon
+[ ] Sellers tábla rekordjai betöltődnek
+[ ] ListBoxban csak az eladó neve látszik
+[ ] Eladó neve címke adatkötéssel működik
+[ ] Eladó telefonszáma címke adatkötéssel működik
+[ ] Hirdetések betöltése gomb működik
+[ ] Hirdetések száma megjelenik
+[ ] Kijelölt eladó alapján számol
+[ ] Ablak reszponzív Anchor beállításokkal
+16. Gyakori hibák
+Nem csatlakozik az adatbázishoz
+
+Ellenőrizd:
+
+server=localhost;
+database=ingatlan;
+uid=root;
+pwd=;
+
+Ha XAMPP-ot használsz, indítsd el:
+
+Apache
+MySQL
+Nem találja a MySqlConnection osztályt
+
+Telepítsd:
+
+MySql.Data
+
+És legyen fent:
+
+using MySql.Data.MySqlClient;
+A ListBox nem nevet jelenít meg
+
+Állítsd be:
+
+listBoxSellers.DisplayMember = "Name";
+
+Vagy a Seller osztályban:
+
+public override string ToString()
+{
+    return Name;
+}
+A hirdetések száma mindig 0
+
+Ellenőrizd az oszlopnevet:
+
+DESCRIBE realestates;
+
+Lehet, hogy nem ez:
+
+sellerId
+
+hanem ez:
+
+seller_id
+17. Rövid vizsgás sorrend
+1. ingatlan adatbázis létrehozása
+2. ingatlan.sql lefuttatása
+3. RealEstateGUI projekt létrehozása
+4. MySql.Data telepítése
+5. Form vezérlők elhelyezése
+6. Seller osztály létrehozása
+7. Connection string megírása
+8. SellersBetoltese() metódus megírása
+9. ListBox DataSource beállítása
+10. DisplayMember beállítása
+11. Eladó neve adatkötés
+12. Eladó telefonszáma adatkötés
+13. Button Click esemény
+14. COUNT SQL lekérdezés
+15. Hirdetések száma kiírása
+
+Ez a GUI részhez a vizsgán követhető alap jegyzet.
